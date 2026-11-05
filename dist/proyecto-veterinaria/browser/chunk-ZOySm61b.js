@@ -1,0 +1,1 @@
+import{ft as rd}from"./main-AMDQC6CB.js";var e=class r{transform(a){return{PROGRAMADA:`bg-primary`,EN_ATENCION:`bg-warning text-dark`,COMPLETADA:`bg-success`,CANCELADA:`bg-danger`}[a]||`bg-secondary`}static ɵfac=function(t){return new(t||r)};static ɵpipe=rd({name:`estadoCita`,type:r,pure:!0,standalone:!1})};export{e as t};
