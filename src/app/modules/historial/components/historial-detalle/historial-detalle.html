@@ -24,7 +24,8 @@
 
   <div *ngIf="mascotaActual; else noSeleccion">
     <div class="row g-4">
-      <!-- TARJETA: FICHA TÉCNICA DEL PACIENTE Y CONTACTO (POO) -->
+      
+      <!-- FICHA DEL PACIENTE Y DATOS DEL DUEÑO -->
       <div class="col-lg-4">
         <div class="card border-0 shadow-sm rounded-4 mb-4">
           <div class="card-header bg-primary text-white py-3 rounded-top-4">
@@ -58,20 +59,37 @@
 
             <hr class="text-secondary opacity-25">
 
-            <!-- DATOS DEL DUEÑO CON MÉTODO POLIMÓRFICO -->
+            <!-- DATOS DEL PROPIETARIO -->
             <h6 class="fw-bold text-dark mb-2">
               <i class="bi bi-person-badge me-2 text-primary"></i>Datos del Propietario
             </h6>
-            <div *ngIf="duenoActual" class="p-3 bg-light rounded-3 small">
-              <p class="mb-1 text-dark fw-bold">{{ duenoActual.obtenerResumenContacto() }}</p>
-              <p class="mb-1 text-secondary"><i class="bi bi-geo-alt me-1"></i>{{ duenoActual.direccion }}</p>
-              <p class="mb-0 text-secondary"><i class="bi bi-envelope me-1"></i>{{ duenoActual.email }}</p>
-            </div>
+            
+            <div *ngIf="duenoActual; else sinDueno" class="p-3 bg-light rounded-3 small border">
+  <p class="mb-1 text-dark fw-bold">
+    {{ $any(duenoActual).nombre || $any(duenoActual).nombreCompleto || 'Sin nombre' }} (DNI: {{ duenoActual.dni }})
+  </p>
+  <p class="mb-1 text-secondary" *ngIf="duenoActual.telefono">
+    <i class="bi bi-telephone me-1"></i>Tel: {{ duenoActual.telefono }}
+  </p>
+  <p class="mb-1 text-secondary" *ngIf="duenoActual.direccion">
+    <i class="bi bi-geo-alt me-1"></i>{{ duenoActual.direccion }}
+  </p>
+  <p class="mb-0 text-secondary" *ngIf="duenoActual.email || $any(duenoActual).correo">
+    <i class="bi bi-envelope me-1"></i>{{ duenoActual.email || $any(duenoActual).correo }}
+  </p>
+</div>
+
+            <ng-template #sinDueno>
+              <div class="p-3 bg-light rounded-3 small text-muted text-center border">
+                Propietario no vinculado o ID no registrado (ID: {{ mascotaActual.duenoId || 'Sin ID' }})
+              </div>
+            </ng-template>
+
           </div>
         </div>
       </div>
 
-      <!-- LÍNEA DE TIEMPO / HISTORIAL DE ATENCIONES -->
+      <!-- REGISTRO CLÍNICO DE VISITAS Y RECETA MÉDICA -->
       <div class="col-lg-8">
         <div class="card border-0 shadow-sm rounded-4">
           <div class="card-header bg-white py-3 border-0">
@@ -86,13 +104,15 @@
               <p class="text-muted m-0">No hay atenciones o citas registradas para este paciente.</p>
             </div>
 
-            <!-- ACORDEÓN BOOTSTRAP DE CITAS -->
+            <!-- ACORDEÓN DE ATENCIONES -->
             <div class="accordion" id="accordionHistorial" *ngIf="citasMascota.length > 0">
               <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden" 
                    *ngFor="let cita of citasMascota; let i = index">
+                
                 <h2 class="accordion-header" [id]="'heading' + i">
                   <button 
-                    class="accordion-button collapsed fw-semibold" 
+                    class="accordion-button fw-semibold" 
+                    [class.collapsed]="i !== 0"
                     type="button" 
                     data-bs-toggle="collapse" 
                     [attr.data-bs-target]="'#collapse' + i">
@@ -102,32 +122,57 @@
                         <span>{{ cita.fechaHora | date:'medium' }}</span>
                         <span class="ms-2 text-muted fw-normal small">— {{ cita.motivo }}</span>
                       </div>
-                      <!-- PIPE ESTADO CITA -->
                       <span [ngClass]="cita.estado | estadoCita">{{ cita.estado }}</span>
                     </div>
                   </button>
                 </h2>
-                <div [id]="'collapse' + i" class="accordion-collapse collapse" [attr.data-bs-parent]="'#accordionHistorial'">
+
+                <div [id]="'collapse' + i" 
+                     class="accordion-collapse collapse" 
+                     [class.show]="i === 0"
+                     [attr.data-bs-parent]="'#accordionHistorial'">
+                  
                   <div class="accordion-body bg-light">
-                    <div class="row">
-                      <div class="col-md-6 mb-2">
+                    <div class="row g-3">
+                      
+                      <!-- DOCTOR ATENDIENTE -->
+                      <div class="col-md-6">
+                        <strong class="text-secondary small d-block">Doctor / Veterinario Tratante:</strong>
+                        <span class="fw-bold text-primary">
+                          👨‍⚕️ {{ obtenerNombreVeterinario(cita.veterinarioId) }}
+                        </span>
+                      </div>
+
+                      <div class="col-md-6">
                         <strong class="text-secondary small d-block">Prioridad asignada:</strong>
-                        <span class="badge" [ngClass]="cita.prioridad === 'EMERGENCIA' ? 'bg-danger' : 'bg-secondary'">
+                        <span class="badge" [ngClass]="cita.prioridad === 'EMERGENCIA' ? 'bg-danger' : (cita.prioridad === 'URGENCIA' ? 'bg-warning text-dark' : 'bg-success')">
                           {{ cita.prioridad }}
                         </span>
                       </div>
-                      <div class="col-md-6 mb-2">
-                        <strong class="text-secondary small d-block">Código de Registro:</strong>
-                        <span class="font-monospace text-dark">{{ cita.id }}</span>
+
+                      <!-- DIAGNÓSTICO Y DETALLE DE ATENCIÓN -->
+                      <div class="col-12 col-md-6">
+                        <strong class="text-secondary small d-block mb-1">Detalle de Atención / Diagnóstico:</strong>
+                        <div class="bg-white p-3 rounded-2 border small text-dark" style="white-space: pre-line;">
+                          <strong>Diagnóstico:</strong> {{ cita.diagnostico || 'Evaluación general' }}
+                          <hr class="my-2">
+                          {{ cita.detalleAtencion || 'Atención completada con parámetros normales.' }}
+                        </div>
                       </div>
-                      <div class="col-12 mt-2">
-                        <strong class="text-secondary small d-block">Diagnóstico y Notas Médicas:</strong>
-                        <p class="bg-white p-3 rounded-2 border small text-dark mb-0">
-                          Paciente evaluado bajo parámetros normales. Tratamiento sintomático y seguimiento preventivo.
-                        </p>
+
+                      <!-- RECETA MÉDICA -->
+                      <div class="col-12 col-md-6">
+                        <strong class="text-secondary small d-block mb-1">Receta Médica / Prescripción:</strong>
+                        <div class="bg-white p-3 rounded-2 border small text-dark border-success" style="white-space: pre-line;">
+                          📋 <strong>Indicaciones:</strong>
+                          <br>
+                          {{ cita.receta || 'Sin prescripción de medicamentos.' }}
+                        </div>
                       </div>
+
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -135,6 +180,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </div>
 

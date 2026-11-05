@@ -1,9 +1,14 @@
+
 <div class="container mt-4">
+
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Agenda de citas médicas</h2>
-    <a routerLink="/citas/nueva" class="btn btn-primary">
-      Registrar cita
-    </a>
+    <h2>Agenda de Citas Médicas</h2>
+
+    <button
+      class="btn btn-primary"
+      routerLink="/citas/nueva">
+      + Registrar nueva cita
+    </button>
   </div>
 
   <div *ngIf="citas.length === 0" class="alert alert-info">
@@ -12,6 +17,7 @@
 
   <div class="table-responsive" *ngIf="citas.length > 0">
     <table class="table table-bordered table-hover align-middle">
+
       <thead class="table-dark">
         <tr>
           <th>Mascota</th>
@@ -19,47 +25,146 @@
           <th>Motivo</th>
           <th>Prioridad</th>
           <th>Estado</th>
+          <th>Veterinario</th>
           <th>Acciones</th>
         </tr>
       </thead>
 
       <tbody>
-        <tr *ngFor="let cita of citas" [appHighlightUrgente]="cita.prioridad">
+        <tr
+          *ngFor="let cita of citas"
+          [appHighlightUrgente]="cita.prioridad">
+
           <td>{{ nombreMascota(cita.mascotaId) }}</td>
+
           <td>{{ cita.fechaHora | date:'dd/MM/yyyy HH:mm' }}</td>
+
           <td>{{ cita.motivo }}</td>
-          <td>{{ cita.prioridad }}</td>
+
           <td>
-            <span class="badge" [ngClass]="cita.estado | estadoCita">
+            <span
+              class="badge"
+              [ngClass]="{
+                'bg-success': cita.prioridad === 'ESTABLE',
+                'bg-warning text-dark': cita.prioridad === 'URGENCIA',
+                'bg-danger': cita.prioridad === 'EMERGENCIA'
+              }">
+              {{ cita.prioridad }}
+            </span>
+          </td>
+
+          <td>
+            <span [class]="cita.estado | estadoCita">
               {{ cita.estado }}
             </span>
           </td>
+
+          <td>{{ nombreVeterinario(cita.veterinarioId) }}</td>
+
           <td>
-            <div class="d-flex flex-wrap gap-1">
+
+            <button
+              *ngIf="cita.estado === 'PROGRAMADA' && citaSeleccionadaId !== cita.id"
+              class="btn btn-sm btn-info mb-1"
+              (click)="seleccionarVeterinario(cita)">
+              Iniciar Atención
+            </button>
+
+            <div *ngIf="citaSeleccionadaId === cita.id" class="mb-2">
+
+              <select
+                class="form-select form-select-sm mb-2"
+                [(ngModel)]="veterinarioSeleccionadoId">
+
+                <option value="">Seleccionar veterinario</option>
+
+                <option
+                  *ngFor="let veterinario of veterinarios"
+                  [value]="veterinario.id">
+                  {{ veterinario.nombre }}
+                </option>
+
+              </select>
+
               <button
-                *ngIf="cita.estado === 'PROGRAMADA'"
-                class="btn btn-sm btn-info"
-                (click)="cambiarEstado(cita, 'EN_ATENCION')">
-                Iniciar Atención
+                class="btn btn-sm btn-success me-1"
+                [disabled]="!veterinarioSeleccionadoId"
+                (click)="confirmarAtencion(cita)">
+                Confirmar
               </button>
 
               <button
-                *ngIf="cita.estado === 'EN_ATENCION'"
-                class="btn btn-sm btn-success"
-                (click)="cambiarEstado(cita, 'COMPLETADA')">
-                Completar
+                class="btn btn-sm btn-secondary"
+                (click)="cancelarSeleccion()">
+                Volver
               </button>
 
-              <button
-                *ngIf="cita.estado === 'PROGRAMADA' || cita.estado === 'EN_ATENCION'"
-                class="btn btn-sm btn-danger"
-                (click)="cambiarEstado(cita, 'CANCELADA')">
-                Cancelar
-              </button>
             </div>
+
+            <button
+              *ngIf="cita.estado === 'EN_ATENCION' && citaParaCompletarId !== cita.id"
+              class="btn btn-sm btn-success mb-1"
+              (click)="abrirFormularioAtencion(cita)">
+              Completar
+            </button>
+
+            <div
+              *ngIf="citaParaCompletarId === cita.id"
+              class="mt-2"
+              style="min-width: 220px;">
+
+              <h6>Registrar atención médica</h6>
+
+              <label class="form-label">Diagnóstico</label>
+              <textarea
+                class="form-control form-control-sm mb-2"
+                rows="2"
+                [(ngModel)]="diagnostico">
+              </textarea>
+
+              <label class="form-label">Detalle de atención</label>
+              <textarea
+                class="form-control form-control-sm mb-2"
+                rows="3"
+                [(ngModel)]="detalleAtencion">
+              </textarea>
+
+              <label class="form-label">Receta médica</label>
+              <textarea
+                class="form-control form-control-sm mb-2"
+                rows="2"
+                [(ngModel)]="receta">
+              </textarea>
+
+              <div *ngIf="mensaje" class="alert alert-info p-2">
+                {{ mensaje }}
+              </div>
+
+              <button
+                class="btn btn-sm btn-success me-1"
+                (click)="guardarAtencion(cita)">
+                Guardar atención
+              </button>
+
+              <button
+                class="btn btn-sm btn-secondary"
+                (click)="cancelarFormularioAtencion()">
+                Volver
+              </button>
+
+            </div>
+
+            <button
+              *ngIf="cita.estado === 'PROGRAMADA' || cita.estado === 'EN_ATENCION'"
+              class="btn btn-sm btn-danger mb-1"
+              (click)="cambiarEstado(cita, 'CANCELADA')">
+              Cancelar cita
+            </button>
+
           </td>
         </tr>
       </tbody>
+
     </table>
   </div>
 </div>

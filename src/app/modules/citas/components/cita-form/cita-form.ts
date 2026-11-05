@@ -2,6 +2,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+
 import { StorageService } from '../../../../core/services/storage';
 import { Mascota } from '../../../../core/models/mascota.model';
 import { ICita, PrioridadCita } from '../../../../core/models/cita.model';
@@ -27,7 +28,7 @@ export class CitaForm {
       fecha: ['', Validators.required],
       hora: ['', Validators.required],
       motivo: ['', Validators.required],
-      prioridad: ['MEDIA' as PrioridadCita, Validators.required]
+      prioridad: ['ESTABLE' as PrioridadCita, Validators.required]
     });
 
     this.mascotas = this.storage.getMascotas();
@@ -41,16 +42,13 @@ export class CitaForm {
     }
 
     const datos = this.formulario.getRawValue();
-    const mascota = this.mascotas.find(m => m.id === datos.mascotaId);
 
-    if (
-      !mascota ||
-      !datos.fecha ||
-      !datos.hora ||
-      !datos.motivo ||
-      !datos.prioridad
-    ) {
-      this.mensaje = 'Verifica los datos ingresados.';
+    const mascota = this.mascotas.find(
+      m => m.id === datos.mascotaId
+    );
+
+    if (!mascota) {
+      this.mensaje = 'Selecciona una mascota válida.';
       return;
     }
 
@@ -65,6 +63,15 @@ export class CitaForm {
     };
 
     this.storage.guardarCita(cita);
+
+    this.formulario.reset({
+      mascotaId: '',
+      fecha: '',
+      hora: '',
+      motivo: '',
+      prioridad: 'ESTABLE'
+    });
+
     this.router.navigate(['/citas']);
   }
 

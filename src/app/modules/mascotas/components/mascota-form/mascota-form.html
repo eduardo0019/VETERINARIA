@@ -11,11 +11,112 @@
   <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
     <div class="row g-4">
 
-      <!-- DATOS MASCOTA -->
-      <div class="col-12 col-md-6" formGroupName="mascota">
-        <div class="card h-100">
-          <div class="card-header fw-bold">Datos Mascota</div>
+      <!-- 1. DATOS DUEÑO -->
+      <div class="col-12 col-md-6" formGroupName="dueno">
+        <div class="card h-100 shadow-sm">
+          <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+            <span>1. Datos Dueño</span>
+            @if (duenoIdGenerado) {
+              <span class="badge bg-success">ID: {{ duenoIdGenerado }}</span>
+            }
+          </div>
           <div class="card-body">
+
+            <!-- Selector de modo (Existente vs Nuevo) -->
+            @if (!duenoGuardado) {
+              <div class="btn-group w-100 mb-3" role="group">
+                <button type="button" class="btn btn-outline-primary btn-sm"
+                        [class.active]="modoDueno === 'existente'"
+                        [disabled]="duenosRegistrados.length === 0"
+                        (click)="cambiarModoDueno('existente')">
+                  Buscar Existente
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm"
+                        [class.active]="modoDueno === 'nuevo'"
+                        (click)="cambiarModoDueno('nuevo')">
+                  Registrar Nuevo
+                </button>
+              </div>
+            }
+
+            <!-- Desplegable para seleccionar dueño existente -->
+            @if (modoDueno === 'existente' && !duenoGuardado) {
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Seleccionar Dueño</label>
+                <select class="form-select" (change)="seleccionarDuenoExistente($event)">
+                  <option value="">-- Elige un dueño de la lista --</option>
+                  @for (d of duenosRegistrados; track d.id) {
+                    <option [value]="d.id">
+                      {{ d.nombre }} - DNI: {{ d.dni }}
+                    </option>
+                  }
+                </select>
+              </div>
+            }
+
+            <!-- Campos de información del dueño -->
+            <div class="mb-3">
+              <label class="form-label">Nombre completo</label>
+              <input class="form-control" formControlName="nombre" [readonly]="modoDueno === 'existente'"
+                     [class.is-invalid]="esInvalido('dueno.nombre')">
+              <div class="invalid-feedback">Ingresa el nombre completo.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">DNI</label>
+              <input class="form-control" formControlName="dni" maxlength="8" [readonly]="modoDueno === 'existente'"
+                     [class.is-invalid]="esInvalido('dueno.dni')">
+              <div class="invalid-feedback">El DNI debe tener 8 dígitos.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Teléfono</label>
+              <input type="tel" class="form-control" formControlName="telefono" [readonly]="modoDueno === 'existente'"
+                     [class.is-invalid]="esInvalido('dueno.telefono')">
+              <div class="invalid-feedback">El teléfono debe tener mínimo 9 dígitos.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Correo electrónico</label>
+              <input type="email" class="form-control" formControlName="email" [readonly]="modoDueno === 'existente'"
+                     [class.is-invalid]="esInvalido('dueno.email')">
+              <div class="invalid-feedback">Ingresa un correo válido.</div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Dirección</label>
+              <input class="form-control" formControlName="direccion" [readonly]="modoDueno === 'existente'"
+                     [class.is-invalid]="esInvalido('dueno.direccion')">
+              <div class="invalid-feedback">Ingresa la dirección.</div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              @if (duenoGuardado) {
+                <button type="button" class="btn btn-outline-warning btn-sm" (click)="editarDueno()">
+                  Cambiar Dueño
+                </button>
+              } @else {
+                <button type="button" class="btn btn-primary btn-sm" (click)="confirmarDueno()">
+                  Confirmar / Vincular Dueño
+                </button>
+              }
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. DATOS MASCOTA -->
+      <div class="col-12 col-md-6" formGroupName="mascota">
+        <div class="card h-100 shadow-sm" [class.opacity-50]="!duenoGuardado">
+          <div class="card-header fw-bold">2. Datos Mascota</div>
+          <div class="card-body">
+
+            @if (!duenoGuardado) {
+              <div class="alert alert-info py-2" role="alert">
+                <small>Primero selecciona o confirma al dueño para registrar la mascota.</small>
+              </div>
+            }
 
             <div class="mb-3">
               <label class="form-label">Nombre</label>
@@ -36,11 +137,29 @@
               <div class="invalid-feedback">Selecciona la especie.</div>
             </div>
 
+            <!-- Campo dinámico: Especificar animal si elige 'Otro' -->
+            @if (esOtroEspecie) {
+              <div class="mb-3">
+                <label class="form-label">Especificar tipo de animal</label>
+                <input class="form-control" formControlName="especieOtra" placeholder="Ej: Hámster, Conejo, Tortuga..."
+                       [class.is-invalid]="esInvalido('mascota.especieOtra')">
+                <div class="invalid-feedback">Ingresa el tipo de animal.</div>
+              </div>
+            }
+
             <div class="mb-3">
               <label class="form-label">Raza</label>
               <input class="form-control" formControlName="raza"
                      [class.is-invalid]="esInvalido('mascota.raza')">
               <div class="invalid-feedback">Ingresa la raza.</div>
+            </div>
+
+            <!-- Nuevo Campo: Peso -->
+            <div class="mb-3">
+              <label class="form-label">Peso (kg)</label>
+              <input type="number" step="0.1" class="form-control" formControlName="peso" placeholder="Ej: 4.5"
+                     [class.is-invalid]="esInvalido('mascota.peso')">
+              <div class="invalid-feedback">Ingresa un peso válido (mayor a 0 kg).</div>
             </div>
 
             <div class="mb-3">
@@ -54,55 +173,11 @@
         </div>
       </div>
 
-      <!-- DATOS DUEÑO -->
-      <div class="col-12 col-md-6" formGroupName="dueno">
-        <div class="card h-100">
-          <div class="card-header fw-bold">Datos Dueño</div>
-          <div class="card-body">
-
-            <div class="mb-3">
-              <label class="form-label">Nombre completo</label>
-              <input class="form-control" formControlName="nombre"
-                     [class.is-invalid]="esInvalido('dueno.nombre')">
-              <div class="invalid-feedback">Ingresa el nombre completo.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">DNI</label>
-              <input class="form-control" formControlName="dni" maxlength="8"
-                     [class.is-invalid]="esInvalido('dueno.dni')">
-              <div class="invalid-feedback">El DNI debe tener 8 dígitos.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Teléfono</label>
-              <input type="tel" class="form-control" formControlName="telefono"
-                     [class.is-invalid]="esInvalido('dueno.telefono')">
-              <div class="invalid-feedback">El teléfono debe tener mínimo 9 dígitos.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Correo electrónico</label>
-              <input type="email" class="form-control" formControlName="email"
-                     [class.is-invalid]="esInvalido('dueno.email')">
-              <div class="invalid-feedback">Ingresa un correo válido.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Dirección</label>
-              <input class="form-control" formControlName="direccion"
-                     [class.is-invalid]="esInvalido('dueno.direccion')">
-              <div class="invalid-feedback">Ingresa la dirección.</div>
-            </div>
-
-          </div>
-        </div>
-      </div>
     </div>
 
     <div class="d-flex justify-content-end gap-2 mt-4">
       <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
-      <button type="submit" class="btn btn-primary">Guardar</button>
+      <button type="submit" class="btn btn-success" [disabled]="!duenoGuardado">Guardar Mascota</button>
     </div>
   </form>
 </div>

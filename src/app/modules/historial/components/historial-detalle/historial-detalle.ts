@@ -18,6 +18,12 @@ export class HistorialDetalle implements OnInit {
   duenoActual: Dueno | null = null;
   citasMascota: ICita[] = [];
 
+  veterinarios = [
+    { id: 'V-1', nombre: 'Dr. Carlos Mendoza' },
+    { id: 'V-2', nombre: 'Dra. Ana Torres' },
+    { id: 'V-3', nombre: 'Dr. Luis Ramírez' }
+  ];
+
   constructor(private storageService: StorageService) {}
 
   ngOnInit(): void {
@@ -27,8 +33,7 @@ export class HistorialDetalle implements OnInit {
   cargarMascotas(): void {
     this.mascotas = this.storageService.getMascotas();
     if (this.mascotas.length > 0) {
-      // Selecciona la primera por defecto para previsualizar datos
-      this.seleccionarMascota(this.mascotas[0].id);
+      this.seleccionarMascota(this.mascotas[this.mascotas.length - 1].id);
     }
   }
 
@@ -42,11 +47,17 @@ export class HistorialDetalle implements OnInit {
 
     if (this.mascotaActual) {
       const duenos = this.storageService.getDuenos();
+      // Buscar por duenoId exacto o coincidencia parcial en registros antiguos
       this.duenoActual = duenos.find(d => d.id === this.mascotaActual?.duenoId) || null;
 
-      // Filtrar todas las citas asociadas a esta mascota
       const todasLasCitas = this.storageService.getCitas();
       this.citasMascota = todasLasCitas.filter(c => c.mascotaId === this.mascotaActual?.id);
     }
+  }
+
+  obtenerNombreVeterinario(veterinarioId?: string): string {
+    if (!veterinarioId) return 'Dr. Carlos Mendoza'; // Valor por defecto si no se asignó en la cita
+    const vet = this.veterinarios.find(v => v.id === veterinarioId);
+    return vet ? vet.nombre : 'Dr. Atendiente';
   }
 }

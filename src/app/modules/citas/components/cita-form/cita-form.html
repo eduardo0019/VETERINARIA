@@ -1,61 +1,131 @@
 
 <div class="container mt-4">
   <div class="card shadow">
+
     <div class="card-header bg-primary text-white">
       <h4 class="mb-0">Registrar cita médica</h4>
     </div>
 
     <div class="card-body">
+
       <form [formGroup]="formulario" (ngSubmit)="guardar()">
+
+        <!-- Selección de mascota -->
         <div class="mb-3">
-          <label for="mascotaId" class="form-label">Mascota</label>
-          <select id="mascotaId" class="form-select" formControlName="mascotaId">
+          <label for="mascotaId" class="form-label">
+            Mascota
+          </label>
+
+          <select
+            id="mascotaId"
+            class="form-select"
+            formControlName="mascotaId">
+
             <option value="">Seleccionar mascota</option>
-            <option *ngFor="let mascota of mascotas" [value]="mascota.id">
+
+            <option
+              *ngFor="let mascota of mascotas"
+              [value]="mascota.id">
               {{ mascota.nombre }}
             </option>
-          </select>S
-            <div class="text-danger" *ngIf="formulario.get('mascotaId')?.touched && formulario.get('mascotaId')?.invalid"></div>
+
+          </select>
+
+          <div
+            class="text-danger"
+            *ngIf="formulario.get('mascotaId')?.touched &&
+                   formulario.get('mascotaId')?.invalid">
             Selecciona una mascota.
           </div>
-        
+        </div>
 
+        <!-- Fecha y hora -->
         <div class="row">
+
           <div class="col-md-6 mb-3">
-            <label for="fecha" class="form-label">Fecha</label>
-            <input id="fecha" type="date" class="form-control" formControlName="fecha">
+            <label for="fecha" class="form-label">
+              Fecha
+            </label>
+
+            <input
+              id="fecha"
+              type="date"
+              class="form-control"
+              formControlName="fecha">
           </div>
 
           <div class="col-md-6 mb-3">
-            <label for="hora" class="form-label">Hora</label>
-            <input id="hora" type="time" class="form-control" formControlName="hora">
+            <label for="hora" class="form-label">
+              Hora
+            </label>
+
+            <input
+              id="hora"
+              type="time"
+              class="form-control"
+              formControlName="hora">
           </div>
+
         </div>
 
+        <!-- Motivo -->
         <div class="mb-3">
-          <label for="motivo" class="form-label">Motivo de la cita</label>
-          <textarea id="motivo" class="form-control" rows="3" formControlName="motivo"></textarea>
+          <label for="motivo" class="form-label">
+            Motivo de la cita
+          </label>
+
+          <textarea
+            id="motivo"
+            class="form-control"
+            rows="3"
+            formControlName="motivo"
+            placeholder="Describe el motivo de la consulta">
+          </textarea>
         </div>
 
+        <!-- Prioridad -->
         <div class="mb-3">
-          <label for="prioridad" class="form-label">Prioridad</label>
-          <select id="prioridad" class="form-select" formControlName="prioridad">
-            <option value="BAJA">Baja</option>
-            <option value="MEDIA">Media</option>
-            <option value="ALTA">Alta</option>
-            <option value="EMERGENCIA">Emergencia</option>
+          <label for="prioridad" class="form-label">
+            Prioridad de atención
+          </label>
+
+          <select
+            id="prioridad"
+            class="form-select"
+            formControlName="prioridad">
+
+            <option value="ESTABLE">🟢 Estable</option>
+            <option value="URGENCIA">🟡 Urgencia</option>
+            <option value="EMERGENCIA">🔴 Emergencia</option>
+
           </select>
         </div>
 
+        <!-- Mensajes -->
         <div *ngIf="mensaje" class="alert alert-info">
           {{ mensaje }}
         </div>
 
+        <!-- Botones -->
         <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">Guardar cita</button>
-          <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
+
+          <button
+            type="submit"
+            class="btn btn-primary">
+            Guardar cita
+          </button>
+
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelar()">
+            Cancelar
+          </button>
+
         </div>
+
       </form>
+
     </div>
   </div>
 </div>
